@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Timeline Builder</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%97%B7%3C/text%3E%3C/svg%3E" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-mark">◷</span>
+      <h1>Timeline Builder</h1>
+    </div>
+
+    <div class="header-actions">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="검색 (제목, 설명)" />
+      </div>
+      <select id="categoryFilter" title="카테고리 필터">
+        <option value="all">모든 카테고리</option>
+      </select>
+      <button id="btnAddEvent" class="btn btn-primary">+ 이벤트 추가</button>
+      <div class="menu-wrap">
+        <button id="btnMenu" class="btn btn-ghost" title="더보기">⋮</button>
+        <div id="dropdownMenu" class="dropdown hidden">
+          <button id="btnManageCategories">카테고리 관리</button>
+          <button id="btnExport">내보내기 (JSON)</button>
+          <button id="btnImport">가져오기 (JSON)</button>
+          <button id="btnSample">샘플 데이터 불러오기</button>
+          <button id="btnClear" class="danger">전체 삭제</button>
+        </div>
+      </div>
+      <button id="btnTheme" class="btn btn-ghost" title="테마 전환">🌙</button>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <section class="toolbar">
+      <div class="view-toggle">
+        <button id="viewTimelineBtn" class="toggle-btn active" data-view="timeline">타임라인</button>
+        <button id="viewListBtn" class="toggle-btn" data-view="list">목록</button>
+      </div>
+      <div class="zoom-controls">
+        <button id="zoomOut" class="btn btn-ghost" title="축소">－</button>
+        <span id="zoomLabel" class="zoom-label">월</span>
+        <button id="zoomIn" class="btn btn-ghost" title="확대">＋</button>
+        <button id="btnToday" class="btn btn-ghost" title="오늘로 이동">오늘</button>
+        <button id="btnFit" class="btn btn-ghost" title="전체 보기">전체 맞춤</button>
+      </div>
+    </section>
+
+    <section id="timelineView" class="timeline-view">
+      <div id="timelineScroll" class="timeline-scroll">
+        <div id="timelineAxis" class="timeline-axis"></div>
+        <div id="timelineTrack" class="timeline-track">
+          <div id="timelineNow" class="now-line" title="오늘"></div>
+        </div>
+      </div>
+      <p id="emptyState" class="empty-state hidden">
+        아직 이벤트가 없습니다. <button id="btnAddEventEmpty" class="link-btn">첫 이벤트 추가하기</button>
+      </p>
+    </section>
+
+    <section id="listView" class="list-view hidden">
+      <table class="event-table">
+        <thead>
+          <tr>
+            <th>제목</th>
+            <th>카테고리</th>
+            <th>시작일</th>
+            <th>종료일</th>
+            <th>설명</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="eventTableBody"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <!-- Event Add/Edit Modal -->
+  <div id="eventModal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalTitle">이벤트 추가</h2>
+        <button class="modal-close" id="btnCloseModal">✕</button>
+      </div>
+      <form id="eventForm" class="modal-body">
+        <input type="hidden" id="eventId" />
+        <label>
+          제목 <span class="required">*</span>
+          <input type="text" id="eventTitle" required maxlength="120" placeholder="예: 프로젝트 킥오프" />
+        </label>
+
+        <div class="form-row">
+          <label>
+            시작일 <span class="required">*</span>
+            <input type="date" id="eventStart" required />
+          </label>
+          <label>
+            종료일 <span class="hint">(선택)</span>
+            <input type="date" id="eventEnd" />
+          </label>
+        </div>
+
+        <div class="form-row">
+          <label>
+            카테고리
+            <select id="eventCategory"></select>
+          </label>
+          <label>
+            색상
+            <input type="color" id="eventColor" value="#4f7cff" />
+          </label>
+        </div>
+
+        <label>
+          설명 <span class="hint">(선택)</span>
+          <textarea id="eventDescription" rows="3" maxlength="1000" placeholder="자세한 내용을 입력하세요"></textarea>
+        </label>
+
+        <div class="modal-footer">
+          <button type="button" id="btnDeleteEvent" class="btn btn-danger hidden">삭제</button>
+          <div class="spacer"></div>
+          <button type="button" id="btnCancelModal" class="btn btn-ghost">취소</button>
+          <button type="submit" class="btn btn-primary">저장</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Category Management Modal -->
+  <div id="categoryModal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>카테고리 관리</h2>
+        <button class="modal-close" id="btnCloseCategoryModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="categoryList" class="category-list"></div>
+        <form id="categoryForm" class="category-form">
+          <input type="text" id="newCategoryName" placeholder="새 카테고리 이름" maxlength="40" required />
+          <input type="color" id="newCategoryColor" value="#4f7cff" />
+          <button type="submit" class="btn btn-primary">추가</button>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" id="btnCloseCategoryModal2" class="btn btn-ghost">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="importFileInput" accept="application/json" class="hidden" />
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
